@@ -7,6 +7,7 @@ DISK="/dev/sdX" # Replace with your disk (e.g., /dev/sda)
 HOSTNAME="archlinux"
 USERNAME="jacob"
 PASSWORD="jacob"
+DISK="/dev/sda"
 
 # Partitioning
 echo "Partitioning the disk..."
