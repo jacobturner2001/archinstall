@@ -73,6 +73,10 @@ useradd -m -G wheel -s /bin/bash $USERNAME
 echo "$USERNAME:$PASSWORD" | chpasswd
 echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
+# Enable services
+systemctl enable NetworkManager
+systemctl enable sddm.service
+
 # Install KDE Plasma, Xorg, Wayland, and Hyprland
 pacman -S --noconfirm xorg plasma kde-applications sddm wayland hyprland
 systemctl enable sddm
