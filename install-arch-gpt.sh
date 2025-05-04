@@ -42,8 +42,8 @@ echo "Entering chroot..."
 arch-chroot /mnt /bin/bash <<EOF
 
 # Timezone and localization
-ln -sf /usr/share/zoneinfo/Region/City /etc/localtime
-ln -sf /usr/share/zoneinfo/UTC /etc/localtime # Replace UTC with your timezone (e.g., America/New_York)
+ln -sf /usr/share/zoneinfo/america/indianapolis /etc/localtime
+ln -sf /usr/share/zoneinfo/america/indianapolis /etc/localtime # Replace UTC with your timezone (e.g., America/New_York)
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
