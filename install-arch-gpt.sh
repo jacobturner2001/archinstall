@@ -31,7 +31,7 @@ swapon "${DISK}2"
 
 # Install base system
 echo "Installing base system..."
-pacstrap /mnt base linux linux-firmware
+pacstrap /mnt base linux linux-firmware sudo
 
 # Generate fstab
 echo "Generating fstab..."
