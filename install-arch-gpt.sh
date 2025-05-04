@@ -74,7 +74,8 @@ echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 
 # Install KDE Plasma, Xorg, Wayland, and Hyprland
-sudo pacman -S --noconfirm xorg plasma kde-applications sddm wayland hyprland-meta git base-devel
+sudo pacman -S --noconfirm xorg plasma kde-applications  wayland hyprland-meta git base-devel sddm networkmanager
+
 
 systemctl enable sddm.service
 systemctl enable NetworkManager.service
