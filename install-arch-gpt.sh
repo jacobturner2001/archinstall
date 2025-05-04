@@ -74,13 +74,12 @@ echo "$USERNAME:$PASSWORD" | chpasswd
 echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 #!/bin/bash
 
-
-
-
-echo "Custom ISO created: $ISO_NAME"
-
 # Install KDE Plasma, Xorg, Wayland, and Hyprland
-pacman -S --noconfirm xorg plasma kde-applications sddm wayland hyprland
+pacman -S --noconfirm xorg plasma kde-applications sddm wayland  hyprland-meta-git git
+git clone https://aur.archlinux.org/yay.git 
+cd yay
+makepkg -si --noconfirm
+cd ..
 systemctl enable sddm
 systemctl enable NetworkManager
 
