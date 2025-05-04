@@ -3,11 +3,10 @@
 set -e
 
 # Variables
-DISK="/dev/sdX" # Replace with your disk (e.g., /dev/sda)
+DISK="/dev/sda" # Replace with your disk (e.g., /dev/sda)
 HOSTNAME="archlinux"
 USERNAME="jacob"
 PASSWORD="jacob"
-DISK="/dev/sda"
 
 # Partitioning
 echo "Partitioning the disk..."
@@ -44,7 +43,7 @@ arch-chroot /mnt /bin/bash <<EOF
 
 # Timezone and localization
 ln -sf /usr/share/zoneinfo/Region/City /etc/localtime
-hwclock --systohc
+ln -sf /usr/share/zoneinfo/UTC /etc/localtime # Replace UTC with your timezone (e.g., America/New_York)
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
@@ -72,14 +71,11 @@ grub-mkconfig -o /boot/grub/grub.cfg
 useradd -m -G wheel -s /bin/bash $USERNAME
 echo "$USERNAME:$PASSWORD" | chpasswd
 echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-#!/bin/bash
+
 
 # Install KDE Plasma, Xorg, Wayland, and Hyprland
-pacman -S --noconfirm xorg plasma kde-applications sddm wayland  hyprland-meta-git git
-git clone https://aur.archlinux.org/yay.git 
-cd yay
-makepkg -si --noconfirm
-cd ..
+sudo pacman -S --noconfirm xorg plasma kde-applications sddm wayland hyprland-meta git base-devel
+
 systemctl enable sddm
 systemctl enable NetworkManager
 
