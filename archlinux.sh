@@ -94,6 +94,38 @@ else
     grub-install --target=i386-pc "$disk"
 fi
 grub-mkconfig -o /boot/grub/grub.cfg
+
+# Choose desktop environment
+echo "Select your preferred desktop environment:"
+echo "1) KDE Plasma"
+echo "2) GNOME"
+echo "3) XFCE"
+echo "4) None (minimal installation)"
+read -p "Enter your choice (1-4): " de_choice
+
+case \$de_choice in
+    1)
+        echo "Installing KDE Plasma..."
+        pacman -S --noconfirm xorg plasma kde-applications sddm
+        systemctl enable sddm.service
+        ;;
+    2)
+        echo "Installing GNOME..."
+        pacman -S --noconfirm xorg gnome gnome-extra gdm
+        systemctl enable gdm.service
+        ;;
+    3)
+        echo "Installing XFCE..."
+        pacman -S --noconfirm xorg xfce4 xfce4-goodies lightdm lightdm-gtk-greeter
+        systemctl enable lightdm.service
+        ;;
+    4)
+        echo "Skipping desktop environment installation."
+        ;;
+    *)
+        echo "Invalid choice. Skipping desktop environment installation."
+        ;;
+esac
 EOF
 
 # Unmount and reboot
