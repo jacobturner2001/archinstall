@@ -31,7 +31,10 @@ swapon "${DISK}2"
 
 # Install base system
 echo "Installing base system..."
-pacstrap /mnt base linux linux-firmware sudo
+if ! pacstrap /mnt base linux linux-firmware sudo; then
+    echo "Error: Failed to install the base system."
+    exit 1
+fi
 
 # Generate fstab
 echo "Generating fstab..."
@@ -42,8 +45,8 @@ echo "Entering chroot..."
 arch-chroot /mnt /bin/bash <<EOF
 
 # Timezone and localization
-ln -sf /usr/share/zoneinfo/america/indianapolis /etc/localtime
-ln -sf /usr/share/zoneinfo/america/indianapolis /etc/localtime # Replace UTC with your timezone (e.g., America/New_York)
+ln -sf /usr/share/zoneinfo/America/indiana/indianapolis /etc/localtime
+hwclock --systohc
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
@@ -64,7 +67,10 @@ echo "root:$PASSWORD" | chpasswd
 
 # Bootloader
 pacman -S --noconfirm grub efibootmgr
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+if ! grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB; then
+    echo "Error: GRUB installation failed."
+    exit 1
+fi
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # User setup
@@ -72,11 +78,10 @@ useradd -m -G wheel -s /bin/bash $USERNAME
 echo "$USERNAME:$PASSWORD" | chpasswd
 echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-
 # Install KDE Plasma, Xorg, Wayland, and Hyprland
-sudo pacman -S --noconfirm xorg plasma kde-applications  wayland hyprland-meta git base-devel sddm networkmanager
+pacman -S --noconfirm xorg plasma kde-applications wayland hyprland-meta git base-devel sddm networkmanager
 
-
+# Enable services
 systemctl enable sddm.service
 systemctl enable NetworkManager.service
 
@@ -84,6 +89,7 @@ EOF
 
 # Unmount and reboot
 echo "Installation complete. Unmounting and rebooting..."
+umount /mnt/boot
 umount -R /mnt
 swapoff -a
 reboot
