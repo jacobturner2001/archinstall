@@ -4,22 +4,13 @@ set -e
 
 echo "Welcome to the Arch Linux Interactive Installer!"
 
-# Connect to Wi-Fi using iwctl
-echo "Starting iwctl to connect to Wi-Fi..."
-iwctl <<EOF
-device list
-station wlan0 scan
-station wlan0 get-networks
-EOF
-
-read -p "Enter the Wi-Fi network name (SSID): " ssid
-read -sp "Enter the Wi-Fi password: " password
-echo
-iwctl station wlan0 connect "$ssid" --passphrase "$password"
-
-echo "Wi-Fi connection attempt complete. Verifying connection..."
+# Connect to Wi-Fi using iwctl (interactive)
+echo "Launching iwctl. Please connect to your Wi-Fi manually."
+echo "Example: station wlan0 connect <SSID>"
+iwctl
 
 # Verify internet connection
+echo "Verifying internet connection..."
 if ping -c 1 archlinux.org &>/dev/null; then
     echo "Internet connection is active."
 else
@@ -60,11 +51,25 @@ pacstrap /mnt base linux linux-firmware networkmanager sudo
 
 # Generate fstab
 echo "Generating fstab..."
+mkdir -p /mnt/etc
 genfstab -U /mnt >> /mnt/etc/fstab
 
-# Chroot into the system
-echo "Entering chroot environment..."
-arch-chroot /mnt /bin/bash <<EOF
+# Collect config before chroot
+read -p "Enter hostname: " hostname
+echo "$hostname" > /mnt/hostname.txt
+
+echo "Select your preferred desktop environment:"
+echo "1) KDE Plasma"
+echo "2) GNOME"
+echo "3) XFCE"
+echo "4) None (minimal installation)"
+read -p "Enter your choice (1-4): " de_choice
+echo "$de_choice" > /mnt/de_choice.txt
+
+# Chroot into the system and finish setup
+arch-chroot /mnt /bin/bash <<'EOF'
+set -e
+
 # Set timezone
 ln -sf /usr/share/zoneinfo/$(curl -s https://ipapi.co/timezone) /etc/localtime
 hwclock --systohc
@@ -75,35 +80,34 @@ locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 
 # Set hostname
-read -p "Enter hostname: " hostname
-echo "\$hostname" > /etc/hostname
-echo "127.0.0.1   localhost" >> /etc/hosts
-echo "::1         localhost" >> /etc/hosts
-echo "127.0.1.1   \$hostname.localdomain \$hostname" >> /etc/hosts
+hostname=$(cat /hostname.txt)
+echo "$hostname" > /etc/hostname
+{
+echo "127.0.0.1   localhost"
+echo "::1         localhost"
+echo "127.0.1.1   $hostname.localdomain $hostname"
+} >> /etc/hosts
 
 # Set root password
 echo "Set root password:"
 passwd
 
+# Enable network manager
+systemctl enable NetworkManager
+
 # Install bootloader
-if [ -n "$efi_partition" ]; then
+if mount | grep -q "/boot/efi"; then
     pacman -S --noconfirm grub efibootmgr
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
 else
     pacman -S --noconfirm grub
-    grub-install --target=i386-pc "$disk"
+    grub-install --target=i386-pc /dev/sda
 fi
 grub-mkconfig -o /boot/grub/grub.cfg
 
-# Choose desktop environment
-echo "Select your preferred desktop environment:"
-echo "1) KDE Plasma"
-echo "2) GNOME"
-echo "3) XFCE"
-echo "4) None (minimal installation)"
-read -p "Enter your choice (1-4): " de_choice
-
-case \$de_choice in
+# Install desktop environment
+de_choice=$(cat /de_choice.txt)
+case "$de_choice" in
     1)
         echo "Installing KDE Plasma..."
         pacman -S --noconfirm xorg plasma kde-applications sddm
@@ -128,7 +132,11 @@ case \$de_choice in
 esac
 EOF
 
+# Clean up temp files
+rm -f /mnt/hostname.txt /mnt/de_choice.txt
+
 # Unmount and reboot
 umount -R /mnt
 echo "Installation complete! Rebooting..."
 reboot
+# End of script
