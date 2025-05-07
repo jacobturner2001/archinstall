@@ -2,11 +2,65 @@
 
 set -e
 
-# Variables
-DISK="/dev/sda" # Replace with your disk (e.g., /dev/sda)
-HOSTNAME="archlinux"
-USERNAME="jacob"
-PASSWORD="jacob"
+# Function to check if running as root
+check_root() {
+    if [ "$EUID" -ne 0 ]; then
+        echo "Please run as root"
+        exit 1
+    fi
+}
+
+# Function to check internet connection
+check_internet() {
+    if ! ping -c 1 archlinux.org &> /dev/null; then
+        echo "No internet connection. Please connect to the internet and try again."
+        exit 1
+    fi
+}
+
+# Function to check if system is booted in UEFI mode
+check_uefi() {
+    if [ ! -d "/sys/firmware/efi" ]; then
+        echo "System is not booted in UEFI mode. This script requires UEFI."
+        exit 1
+    fi
+}
+
+# Function to list available disks
+list_disks() {
+    echo "Available disks:"
+    lsblk -d -o NAME,SIZE,MODEL
+}
+
+# Check prerequisites
+check_root
+check_internet
+check_uefi
+
+# Interactive disk selection
+list_disks
+read -p "Enter the target disk (e.g., /dev/sda): " DISK
+if [ ! -b "$DISK" ]; then
+    echo "Invalid disk device: $DISK"
+    exit 1
+fi
+
+# Interactive user input
+read -p "Enter hostname: " HOSTNAME
+read -p "Enter username: " USERNAME
+read -s -p "Enter password: " PASSWORD
+echo
+read -s -p "Confirm password: " PASSWORD_CONFIRM
+echo
+
+if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
+    echo "Passwords do not match"
+    exit 1
+fi
+
+# Timezone selection
+echo "Selecting timezone..."
+tzselect
 
 # Partitioning
 echo "Partitioning the disk..."
@@ -45,7 +99,7 @@ echo "Entering chroot..."
 arch-chroot /mnt /bin/bash <<EOF
 
 # Timezone and localization
-ln -sf /usr/share/zoneinfo/America/indiana/indianapolis /etc/localtime
+ln -sf /usr/share/zoneinfo/\$(cat /etc/timezone) /etc/localtime
 hwclock --systohc
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
@@ -76,7 +130,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 # User setup
 useradd -m -G wheel -s /bin/bash $USERNAME
 echo "$USERNAME:$PASSWORD" | chpasswd
-echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
 
 # Install KDE Plasma, Xorg, Wayland, and Hyprland
 pacman -S --noconfirm xorg plasma kde-applications wayland hyprland-meta git base-devel sddm networkmanager
@@ -92,4 +146,6 @@ echo "Installation complete. Unmounting and rebooting..."
 umount /mnt/boot
 umount -R /mnt
 swapoff -a
+
+read -p "Installation complete. Press Enter to reboot..."
 reboot
