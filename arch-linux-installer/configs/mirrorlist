@@ -1,0 +1,19 @@
+## Mirrorlist Configuration for Arch Linux
+
+# This file contains a list of mirror servers for downloading packages.
+# It is used by Pacman to determine the best servers for package retrieval.
+
+Server = https://mirror.rackspace.com/archlinux/$repo/os/$arch
+Server = https://archlinux.mirror.digitalpacific.com.au/$repo/os/$arch
+Server = https://mirror.leaseweb.com/archlinux/$repo/os/$arch
+Server = https://mirror.rit.edu/archlinux/$repo/os/$arch
+Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch
+Server = https://archlinux.thaller.ws/$repo/os/$arch
+Server = https://mirror.ox.ac.uk/sites/archlinux.org/$repo/os/$arch
+Server = https://archlinux.mirror.rafal.ca/$repo/os/$arch
+Server = https://mirror.its.dal.ca/archlinux/$repo/os/$arch
+Server = https://archlinux.mirror.choopa.net/$repo/os/$arch
+
+# Use the following line to enable the use of the fastest mirror
+# Include the following line if you want to use the rankmirrors tool
+# RankMirrors = /etc/pacman.d/mirrorlist
